@@ -221,7 +221,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="field">
       <label>Location</label>
       <div class="location-wrap">
-        <input type="text" id="location" placeholder="Search or enter address..." oninput="handleLocInput()" onblur="setTimeout(hideLoc,200)" autocomplete="off"/>
+        <input type="text" id="location" placeholder="Search or enter address..." oninput="handleLocInput()"/>
         <div class="loc-suggestions" id="loc-suggestions" style="display:none;"></div>
       </div>
     </div>
@@ -271,7 +271,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="field">
         <label>Facility / location</label>
         <div class="location-wrap">
-          <input type="text" id="new-location" placeholder="Search for a place..." oninput="handleNewLocInput()" onblur="setTimeout(hideNewLoc,200)" autocomplete="off"/>
+          <input type="text" id="new-location" placeholder="Search for a place..." oninput="handleNewLocInput()"/>
           <div class="loc-suggestions" id="new-loc-suggestions" style="display:none;"></div>
         </div>
       </div>
@@ -360,29 +360,28 @@ let history = loadHistory();
 
 // ─── PLACES AUTOCOMPLETE ──────────────────────────────────
 function initPlaces() {
-  const dummy = document.createElement("div");
-  placesService = new google.maps.places.AutocompleteService();
+  attachAutocomplete("location");
+  attachAutocomplete("new-location");
 }
 
-function fetchPlaceSuggestions(inputId, boxId) {
-  const val = document.getElementById(inputId).value.trim();
-  const box = document.getElementById(boxId);
-  if (val.length < 2) { box.style.display = "none"; return; }
-  if (!placesService) { showDemoSuggestions(inputId, boxId, val); return; }
-  placesService.getPlacePredictions(
-    { input: val, types: ["establishment", "geocode"], componentRestrictions: { country: "us" } },
-    (predictions, status) => {
-      if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
-        showDemoSuggestions(inputId, boxId, val); return;
-      }
-      box.innerHTML = predictions.slice(0,5).map(p => `
-        <div class="loc-suggestion" onmousedown="selectLoc('${inputId}','${boxId}','${p.description.replace(/'/g,"\\'")}')">
-          📍 <div><span>${p.structured_formatting.main_text}</span><span class="loc-sub">${p.structured_formatting.secondary_text||""}</span></div>
-        </div>`).join("");
-      box.style.display = "block";
+function attachAutocomplete(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input || !google || !google.maps || !google.maps.places) return;
+  const ac = new google.maps.places.Autocomplete(input, {
+    types: ["establishment", "geocode"],
+    componentRestrictions: { country: "us" },
+    fields: ["formatted_address", "name"]
+  });
+  ac.addListener("place_changed", () => {
+    const place = ac.getPlace();
+    if (place.name && place.formatted_address) {
+      input.value = place.name + ", " + place.formatted_address;
+    } else if (place.formatted_address) {
+      input.value = place.formatted_address;
     }
-  );
+  });
 }
+
 
 const DEMO_LOCS = [
   {name:"Kaiser Permanente", sub:"393 E Walnut St, Pasadena, CA"},
@@ -540,8 +539,8 @@ function saveProvider() {
 }
 
 // ─── LOCATION AUTOCOMPLETE ────────────────────────────────
-function handleLocInput() { fetchPlaceSuggestions("location", "loc-suggestions"); }
-function handleNewLocInput() { fetchPlaceSuggestions("new-location", "new-loc-suggestions"); }
+function handleLocInput() { showDemoSuggestions("location", "loc-suggestions", document.getElementById("location").value.trim()); }
+function handleNewLocInput() { showDemoSuggestions("new-location", "new-loc-suggestions", document.getElementById("new-location").value.trim()); }
 function hideLoc() { document.getElementById("loc-suggestions").style.display = "none"; }
 function hideNewLoc() { document.getElementById("new-loc-suggestions").style.display = "none"; }
 
