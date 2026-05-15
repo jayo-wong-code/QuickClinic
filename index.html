@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Quick Book</title>
+<title>QuickClinic</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -148,7 +148,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="screen active" id="screen-lock">
   <div class="lock-screen">
     <div class="lock-icon">🔒</div>
-    <h2>Quick Book</h2>
+    <h2>QuickClinic</h2>
     <p>Enter your password to continue</p>
     <div class="field" style="width:100%;">
       <input type="password" id="pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')checkPassword()" style="width:100%;"/>
@@ -161,7 +161,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <!-- Main screen -->
 <div class="screen" id="screen-main">
   <div class="topbar">
-    <h1>📅 Quick Book</h1>
+    <h1>📅 QuickClinic</h1>
     <div class="topbar-actions">
       <button class="icon-btn" onclick="goTo('screen-history')" title="History">🕐</button>
       <button class="icon-btn" onclick="goTo('screen-providers')" title="Providers">👤</button>
@@ -299,7 +299,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <!-- Confirmation screen -->
 <div class="screen" id="screen-confirm">
-  <div class="topbar"><h1>📅 Quick Book</h1></div>
+  <div class="topbar"><h1>📅 QuickClinic</h1></div>
   <div class="content">
     <div class="confirm-card">
       <div class="confirm-icon">✓</div>
@@ -622,36 +622,38 @@ async function handleCreate() {
 // ─── ICS BUILDER ──────────────────────────────────────────
 function buildICS(title, start, end, location, notes) {
   const fmt = d => d.toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
-  return [
+  const uid = `quickclinic-${Date.now()}@quickclinic`;
+  const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//QuickBook//EN",
-    "METHOD:REQUEST",
+    "PRODID:-//QuickClinic//EN",
+    "METHOD:PUBLISH",
     "BEGIN:VEVENT",
+    `UID:${uid}`,
     `DTSTART:${fmt(start)}`,
     `DTEND:${fmt(end)}`,
     `SUMMARY:${title}`,
-    location ? `LOCATION:${location}` : "",
-    notes ? `DESCRIPTION:${notes}` : "",
     "STATUS:CONFIRMED",
     "TRANSP:OPAQUE",
-    `X-MICROSOFT-CDO-BUSYSTATUS:OOF`,
+    "X-MICROSOFT-CDO-BUSYSTATUS:OOF",
     "BEGIN:VALARM",
     "TRIGGER:-PT1H",
     "ACTION:DISPLAY",
     "DESCRIPTION:Reminder",
     "END:VALARM",
-    "END:VEVENT",
-    "END:VCALENDAR"
-  ].filter(Boolean).join("\r\n");
+  ];
+  if (location) lines.push(`LOCATION:${location}`);
+  if (notes) lines.push(`DESCRIPTION:${notes}`);
+  lines.push("END:VEVENT", "END:VCALENDAR");
+  return lines.join("\r\n");
 }
 
 // ─── SEND EMAIL ───────────────────────────────────────────
 async function sendICSEmail(title, start, end, icsContent) {
   const fmt = d => d.toLocaleString("en-US", {weekday:"long", month:"long", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit"});
-  const boundary = "QuickBook_" + Date.now();
+  const boundary = "QC_" + Date.now();
   const subject = `Calendar invite: ${title}`;
-  const bodyText = `You have an appointment: ${title}\n\nBlock: ${fmt(start)} – ${fmt(end)}\n\nAdded from Quick Book.`;
+  const bodyText = `You have an appointment: ${title}\r\nBlock: ${fmt(start)} - ${fmt(end)}\r\nAdded from QuickClinic.`;
   const icsB64 = btoa(unescape(encodeURIComponent(icsContent)));
 
   const mime = [
@@ -661,18 +663,19 @@ async function sendICSEmail(title, start, end, icsContent) {
     `Content-Type: multipart/mixed; boundary="${boundary}"`,
     "",
     `--${boundary}`,
-    "Content-Type: text/plain; charset=UTF-8",
+    'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: 7bit",
     "",
     bodyText,
     "",
     `--${boundary}`,
-    `Content-Type: text/calendar; charset=UTF-8; method=REQUEST; name="invite.ics"`,
-    `Content-Disposition: attachment; filename="invite.ics"`,
+    'Content-Type: text/calendar; charset="UTF-8"; method=PUBLISH; name="invite.ics"',
+    'Content-Disposition: attachment; filename="invite.ics"',
     "Content-Transfer-Encoding: base64",
     "",
     icsB64,
     "",
-    `--${boundary}--`
+    `--${boundary}--`,
   ].join("\r\n");
 
   const encoded = btoa(unescape(encodeURIComponent(mime)))
