@@ -877,8 +877,9 @@ async function sendICSEmail(title, start, end, icsContent) {
   // Encode subject line for RFC 2047 compliance (handles special chars in Outlook)
   const isoStart = start.toISOString();
   const isoEnd = end.toISOString();
-  const encodeSubject = (str) => "=?UTF-8?B?" + btoa(unescape(encodeURIComponent(str))) + "?=";
-  const subject = encodeSubject(`QCSTART:${isoStart}|QCEND:${isoEnd}|Calendar invite: ${title}`);
+  // Subject kept as plain ASCII so Power Automate can parse timestamps directly
+  const safeTitle = title.replace(/[^\x00-\x7F]/g, "?");
+  const subject = `QCSTART:${isoStart}|QCEND:${isoEnd}|Calendar invite: ${safeTitle}`;
   const bodyText = [
     `QUICKCLINIC-TITLE: ${title}`,
     `QUICKCLINIC-START: ${isoStart}`,
