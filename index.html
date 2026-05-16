@@ -877,7 +877,19 @@ async function sendICSEmail(title, start, end, icsContent) {
   // Encode subject line for RFC 2047 compliance (handles special chars in Outlook)
   const encodeSubject = (str) => "=?UTF-8?B?" + btoa(unescape(encodeURIComponent(str))) + "?=";
   const subject = encodeSubject(`Calendar invite: ${title}`);
-  const bodyText = `You have an appointment: ${title}\r\nBlock: ${fmt(start)} - ${fmt(end)}\r\nAdded from QuickClinic.`;
+  const isoStart = start.toISOString();
+  const isoEnd = end.toISOString();
+  const bodyText = [
+    `QUICKCLINIC-TITLE: ${title}`,
+    `QUICKCLINIC-START: ${isoStart}`,
+    `QUICKCLINIC-END: ${isoEnd}`,
+    `QUICKCLINIC-LOCATION: ${document.getElementById("location").value || ""}`,
+    `QUICKCLINIC-NOTES: ${document.getElementById("notes").value || ""}`,
+    "",
+    `You have an appointment: ${title}`,
+    `When: ${fmt(start)} - ${fmt(end)}`,
+    `Added from QuickClinic.`
+  ].join("\r\n");
   const icsB64 = btoa(unescape(encodeURIComponent(icsContent)));
 
   const mime = [
