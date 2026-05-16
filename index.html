@@ -168,6 +168,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pac-icon { display: none !important; }
 .pac-logo:after { display: none !important; }
 
+
+.edit-form{background:var(--edit-bg,#f9f9f9);border:1px solid #e8e8e8;border-radius:12px;padding:1rem;margin-bottom:0.625rem;margin-top:-0.5rem;}
+.dark .edit-form{background:#1a1a1a;border-color:#333;}
 </style>
 </head>
 <body>
@@ -193,7 +196,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <h1>📅 QuickClinic</h1>
     <div class="topbar-actions">
       <button class="icon-btn" onclick="goTo('screen-history')" title="History">🕐</button>
-      <button class="icon-btn" onclick="goTo('screen-providers')" title="Providers">👤</button>
+      <button class="icon-btn" onclick="goTo('screen-providers')" title="Care Team">👤</button>
       <button class="icon-btn" onclick="toggleDark()" id="dark-btn" title="Dark mode">🌙</button>
     </div>
   </div>
@@ -213,7 +216,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
 
     <div class="field">
-      <label>Provider</label>
+      <label>Care Team</label>
       <select id="provider-select" onchange="onProviderChange()"></select>
     </div>
 
@@ -277,16 +280,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
-<!-- Providers screen -->
+<!-- Care Team screen -->
 <div class="screen" id="screen-providers">
   <div class="topbar">
-    <h1 style="cursor:pointer;" onclick="goTo('screen-main')">← Providers</h1>
-    <button class="icon-btn" onclick="toggleAddForm()" title="Add provider" id="add-icon-btn">＋</button>
+    <h1 style="cursor:pointer;" onclick="goTo('screen-main')">← Care Team</h1>
+    <button class="icon-btn" onclick="toggleAddForm()" title="Add care team member" id="add-icon-btn">＋</button>
   </div>
   <div class="content">
     <div id="providers-list"></div>
     <div class="add-form" id="add-form" style="display:none;">
-      <h3>Add provider</h3>
+      <h3>Add care team</h3>
       <div class="field"><label>Name</label><input type="text" id="new-name" placeholder="e.g. Dr. Sarah Chen"/></div>
       <div class="field">
         <label>Type</label>
@@ -303,7 +306,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div class="loc-suggestions" id="new-loc-suggestions" style="display:none;"></div>
         </div>
       </div>
-      <button class="btn-primary" style="margin-top:0.5rem;" onclick="saveProvider()">✓ Save provider</button>
+      <button class="btn-primary" style="margin-top:0.5rem;" onclick="saveProvider()">✓ Save</button>
       <div class="status" id="provider-status"></div>
     </div>
   </div>
@@ -494,6 +497,34 @@ function toggleDark() {
 }
 
 // Init Places when page ready
+
+function editProvider(id) {
+  // Close any other open edit forms
+  document.querySelectorAll('.edit-form').forEach(f => f.style.display='none');
+  document.getElementById('edit-' + id).style.display = 'block';
+}
+function cancelEdit(id) {
+  document.getElementById('edit-' + id).style.display = 'none';
+}
+function saveEdit(id) {
+  const p = providers.find(x => x.id === id);
+  if (!p) return;
+  p.name = document.getElementById('edit-name-' + id).value.trim() || p.name;
+  p.type = document.getElementById('edit-type-' + id).value;
+  p.location = document.getElementById('edit-loc-' + id).value.trim();
+  saveProviders();
+  renderProvidersList();
+  renderProviderSelect();
+}
+async function handleEditLocInput(id) {
+  const val = document.getElementById('edit-loc-' + id).value.trim();
+  await showPlaceSuggestions(val, 'edit-loc-' + id, 'edit-loc-suggestions-' + id);
+}
+function hideEditLoc(id) {
+  const box = document.getElementById('edit-loc-suggestions-' + id);
+  if (box) box.style.display = 'none';
+}
+
 // Apply dark mode on load
 document.documentElement.classList.add("dark");
 document.addEventListener("DOMContentLoaded", () => {
@@ -512,7 +543,7 @@ function setDefaults() {
 // ─── PROVIDERS ────────────────────────────────────────────
 function renderProviderSelect() {
   const sel = document.getElementById("provider-select");
-  sel.innerHTML = '<option value="">— Select a provider —</option>' +
+  sel.innerHTML = '<option value="">— Select a care team member —</option>' +
     providers.map(p => `<option value="${p.id}">${p.name} (${p.type})</option>`).join("");
 }
 
@@ -525,17 +556,38 @@ function onProviderChange() {
 function renderProvidersList() {
   const el = document.getElementById("providers-list");
   if (!providers.length) {
-    el.innerHTML = '<div class="empty-state"><span class="empty-icon">👤</span>No providers yet. Add one below.</div>';
+    el.innerHTML = '<div class="empty-state"><span class="empty-icon">👤</span>No care team members yet. Add one below.</div>';
     return;
   }
   el.innerHTML = providers.map(p => `
-    <div class="provider-card">
-      <div class="provider-info">
+    <div class="provider-card" id="card-${p.id}">
+      <div class="provider-info" style="flex:1;">
         <span class="type-badge">${p.type}</span>
         <p>${p.name}</p>
         <span>${p.location || "No location set"}</span>
       </div>
-      <button class="btn-danger" onclick="removeProvider(${p.id})">🗑</button>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="btn-secondary" style="padding:6px 10px;font-size:13px;" onclick="editProvider(${p.id})">✏️</button>
+        <button class="btn-danger" onclick="removeProvider(${p.id})">🗑</button>
+      </div>
+    </div>
+    <div class="edit-form" id="edit-${p.id}" style="display:none;">
+      <div class="field"><label>Name</label><input type="text" id="edit-name-${p.id}" value="${p.name}"/></div>
+      <div class="field"><label>Type</label>
+        <select id="edit-type-${p.id}">
+          ${["Primary Care","Dermatologist","Dentist","Optometrist","Cardiologist","Orthopedist","Physical Therapist","Other"].map(t => `<option${t===p.type?" selected":""}>${t}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field"><label>Location</label>
+        <div class="location-wrap">
+          <input type="text" id="edit-loc-${p.id}" value="${p.location||""}" oninput="handleEditLocInput(${p.id})" onblur="setTimeout(()=>hideEditLoc(${p.id}),200)" autocomplete="off"/>
+          <div class="loc-suggestions" id="edit-loc-suggestions-${p.id}" style="display:none;"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:0.5rem;">
+        <button class="btn-secondary" onclick="cancelEdit(${p.id})">Cancel</button>
+        <button class="btn-primary" onclick="saveEdit(${p.id})">✓ Save</button>
+      </div>
     </div>`).join("");
 }
 
@@ -556,7 +608,7 @@ function saveProvider() {
   const name = document.getElementById("new-name").value.trim();
   const type = document.getElementById("new-type").value;
   const loc = document.getElementById("new-location").value.trim();
-  if (!name) { showStatus("provider-status", "Please enter a provider name.", "error"); return; }
+  if (!name) { showStatus("provider-status", "Please enter a care team member name.", "error"); return; }
   providers.push({id: Date.now(), name, type, location: loc});
   saveProviders();
   renderProvidersList();
@@ -564,7 +616,7 @@ function saveProvider() {
   document.getElementById("new-name").value = "";
   document.getElementById("new-location").value = "";
   toggleAddForm();
-  showStatus("provider-status", "Provider saved.", "success");
+  showStatus("provider-status", "Care team member saved.", "success");
 }
 
 // ─── LOCATION AUTOCOMPLETE ────────────────────────────────
@@ -817,7 +869,7 @@ function closeDetail() {
 function buildDetailHTML(entry, p, sentToWork) {
   return `
     <div class="detail-row"><span class="detail-icon">🕐</span><div><div class="detail-label">Calendar block</div><div class="detail-value">${entry.blockStart} → ${entry.blockEnd}</div></div></div>
-    ${p ? `<div class="detail-row"><span class="detail-icon">👤</span><div><div class="detail-label">Provider</div><div class="detail-value">${p.name}</div></div></div>` : ""}
+    ${p ? `<div class="detail-row"><span class="detail-icon">👤</span><div><div class="detail-label">Care Team</div><div class="detail-value">${p.name}</div></div></div>` : ""}
     ${entry.location ? `<div class="detail-row"><span class="detail-icon">📍</span><div><div class="detail-label">Location</div><div class="detail-value">${entry.location}</div></div></div>` : ""}
     ${entry.notes ? `<div class="detail-row"><span class="detail-icon">📝</span><div><div class="detail-label">Notes</div><div class="detail-value">${entry.notes}</div></div></div>` : ""}
     <div class="detail-row"><span class="detail-icon">🔔</span><div><div class="detail-label">Reminder</div><div class="detail-value">1 hour before</div></div></div>
