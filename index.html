@@ -793,7 +793,9 @@ function buildICS(title, start, end, location, notes) {
 async function sendICSEmail(title, start, end, icsContent) {
   const fmt = d => d.toLocaleString("en-US", {weekday:"long", month:"long", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit"});
   const boundary = "QC_" + Date.now();
-  const subject = `Calendar invite: ${title}`;
+  // Encode subject line for RFC 2047 compliance (handles special chars in Outlook)
+  const encodeSubject = (str) => "=?UTF-8?B?" + btoa(unescape(encodeURIComponent(str))) + "?=";
+  const subject = encodeSubject(`Calendar invite: ${title}`);
   const bodyText = `You have an appointment: ${title}\r\nBlock: ${fmt(start)} - ${fmt(end)}\r\nAdded from QuickClinic.`;
   const icsB64 = btoa(unescape(encodeURIComponent(icsContent)));
 
