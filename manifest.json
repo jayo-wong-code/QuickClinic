@@ -2,10 +2,10 @@
   "name": "QuickClinic",
   "short_name": "QuickClinic",
   "description": "Book medical appointments to both your personal and work calendars",
-  "start_url": "/quickclinic/",
+  "start_url": "https://jayo-wong-code.github.io/quickclinic/index.html",
   "display": "standalone",
-  "background_color": "#111111",
-  "theme_color": "#111111",
+  "background_color": "#1a3a1a",
+  "theme_color": "#1a3a1a",
   "orientation": "portrait",
   "icons": [
     {
