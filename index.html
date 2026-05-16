@@ -353,11 +353,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 const APP_PASSWORD = "demo1234"; // Change this to your real password
 const WORK_EMAIL = "justin.wong@visa.com";
 const CLIENT_ID = "659099292112-4qjgd6qb97s63lhmjiege3r2t66sp3ca.apps.googleusercontent.com";
-const SCOPES = "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.send";
+const SCOPES = "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/drive.file";
 const MAPS_KEY = "AIzaSyBjr-2tYid66V57i1FO-bVt_6o2LsTE6NI";
 
 // ─── STATE ────────────────────────────────────────────────
 let accessToken = null;
+let driveFileId = null;
 let isDark = true;
 let prevScreen = "screen-main";
 let placesService = null;
@@ -377,6 +378,7 @@ function loadProviders() {
 
 function saveProviders() {
   try { localStorage.setItem("qc_providers", JSON.stringify(providers)); } catch(e) {}
+  saveToDrive();
 }
 
 function loadHistory() {
@@ -388,6 +390,7 @@ function loadHistory() {
 
 function saveHistory() {
   try { localStorage.setItem("qc_history", JSON.stringify(history)); } catch(e) {}
+  saveToDrive();
 }
 
 let providers = loadProviders();
@@ -445,6 +448,7 @@ function hideNewLoc() { document.getElementById("new-loc-suggestions").style.dis
 function handleAuth() {
   if (accessToken) {
     accessToken = null;
+    driveFileId = null;
     document.getElementById("auth-btn").textContent = "Sign in";
     document.getElementById("account-status").textContent = "Not signed in";
     document.getElementById("account-status").style.color = "";
@@ -453,7 +457,7 @@ function handleAuth() {
   const client = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
     scope: SCOPES,
-    callback: (resp) => {
+    callback: async (resp) => {
       if (resp.error) { showMainStatus("Sign-in failed: " + resp.error, "error"); return; }
       accessToken = resp.access_token;
       // Get user email
@@ -464,9 +468,82 @@ function handleAuth() {
         document.getElementById("account-status").style.color = "#166534";
         document.getElementById("auth-btn").textContent = "Disconnect";
       });
+      // Load data from Drive
+      await loadFromDrive();
+      renderProviderSelect();
+      renderProvidersList();
+      renderHistory();
     }
   });
   client.requestAccessToken();
+}
+
+// ─── GOOGLE DRIVE SYNC ────────────────────────────────────
+const DRIVE_FILENAME = "quickclinic-data.json";
+
+async function loadFromDrive() {
+  try {
+    showMainStatus("Loading your data...", "loading");
+    // Search for existing file
+    const search = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILENAME}'+and+trashed=false&fields=files(id,name)`,
+      { headers: { Authorization: "Bearer " + accessToken } }
+    );
+    const result = await search.json();
+    if (result.files && result.files.length > 0) {
+      driveFileId = result.files[0].id;
+      // Load file contents
+      const fileResp = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
+        { headers: { Authorization: "Bearer " + accessToken } }
+      );
+      const data = await fileResp.json();
+      if (data.providers) providers = data.providers;
+      if (data.history) history = data.history;
+      showMainStatus("Data loaded from Google Drive ✓", "success");
+      setTimeout(() => document.getElementById("main-status").className = "status", 2000);
+    } else {
+      // No file yet — save current data to Drive
+      showMainStatus("Setting up your Drive storage...", "loading");
+      await saveToDrive();
+      showMainStatus("Drive storage set up ✓", "success");
+      setTimeout(() => document.getElementById("main-status").className = "status", 2000);
+    }
+  } catch(e) {
+    console.warn("Drive load error:", e);
+    document.getElementById("main-status").className = "status";
+  }
+}
+
+async function saveToDrive() {
+  if (!accessToken) return;
+  const data = JSON.stringify({ providers, history });
+  try {
+    if (driveFileId) {
+      // Update existing file
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
+        method: "PATCH",
+        headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },
+        body: data
+      });
+    } else {
+      // Create new file
+      const meta = await fetch("https://www.googleapis.com/drive/v3/files", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },
+        body: JSON.stringify({ name: DRIVE_FILENAME, mimeType: "application/json" })
+      });
+      const metaResult = await meta.json();
+      driveFileId = metaResult.id;
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
+        method: "PATCH",
+        headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },
+        body: data
+      });
+    }
+  } catch(e) {
+    console.warn("Drive save error:", e);
+  }
 }
 
 // ─── NAVIGATION ───────────────────────────────────────────
