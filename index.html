@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<link rel="manifest" href="manifest.json"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="QuickClinic"/>
+<link rel="apple-touch-icon" href="icon.png"/>
+<meta name="theme-color" content="#111111"/>
 <title>QuickClinic</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -175,6 +181,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .history-month-header{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.08em;padding:0.75rem 0 0.375rem;border-bottom:1px solid #e8e8e8;margin-bottom:0.5rem;}
 .dark .history-month-header{color:#666;border-color:#2a2a2a;}
 .history-item{display:flex;align-items:center;}
+
+.next-appt-card{background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #2a2a4a;border-radius:12px;padding:1rem;margin-bottom:1rem;}
 </style>
 </head>
 <body>
@@ -206,6 +214,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
   <div class="content">
 
+    <div id="next-appt-widget" style="display:none;" class="next-appt-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Next Appointment</span>
+        <span id="next-appt-countdown" style="font-size:11px;color:#888;"></span>
+      </div>
+      <div id="next-appt-title" style="font-size:15px;font-weight:600;color:#e8e8e8;margin-top:6px;"></div>
+      <div id="next-appt-time" style="font-size:13px;color:#aaa;margin-top:3px;"></div>
+      <div id="next-appt-provider" style="font-size:12px;color:#888;margin-top:2px;"></div>
+    </div>
+
     <div class="google-card">
       <div class="google-row">
         <div class="google-info">
@@ -222,6 +240,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="field">
       <label>Care Team</label>
       <select id="provider-select" onchange="onProviderChange()"></select>
+    </div>
+
+    <div class="field" id="template-field" style="display:none;">
+      <label>Template</label>
+      <select id="template-select" onchange="applyTemplate()">
+        <option value="">— Use a template —</option>
+      </select>
     </div>
 
     <div class="field">
@@ -292,6 +317,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
   <div class="content">
     <div id="providers-list"></div>
+
+    <div style="margin-top:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+        <span style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Appointment Templates</span>
+        <button class="icon-btn" onclick="toggleTemplateForm()" id="add-template-btn" title="Add template">＋</button>
+      </div>
+      <div id="templates-list"></div>
+      <div class="add-form" id="template-form" style="display:none;">
+        <h3>Add template</h3>
+        <div class="field"><label>Care Team Member</label>
+          <select id="tmpl-provider"></select>
+        </div>
+        <div class="field"><label>Appointment type</label>
+          <input type="text" id="tmpl-title" placeholder="e.g. Skin check"/></div>
+        <div class="field"><label>Duration</label>
+          <select id="tmpl-duration">
+            <option value="15">15 min</option><option value="30">30 min</option>
+            <option value="45">45 min</option><option value="60" selected>1 hour</option>
+            <option value="90">1.5 hours</option><option value="120">2 hours</option>
+          </select>
+        </div>
+        <div class="field"><label>Notes</label>
+          <input type="text" id="tmpl-notes" placeholder="e.g. Bring insurance card"/></div>
+        <button class="btn-primary" style="margin-top:0.5rem;" onclick="saveTemplate()">✓ Save template</button>
+        <div class="status" id="template-status"></div>
+      </div>
+    </div>
     <div class="add-form" id="add-form" style="display:none;">
       <h3>Add care team</h3>
       <div class="field"><label>Name</label><input type="text" id="new-name" placeholder="e.g. Dr. Sarah Chen"/></div>
@@ -470,6 +522,7 @@ function handleAuth() {
       });
       // Load data from Drive
       await loadFromDrive();
+      loadNextAppointment();
       renderProviderSelect();
       renderProvidersList();
       renderHistory();
@@ -500,6 +553,7 @@ async function loadFromDrive() {
       const data = await fileResp.json();
       if (data.providers) providers = data.providers;
       if (data.history) history = data.history;
+      if (data.templates) templates = data.templates;
       showMainStatus("Data loaded from Google Drive ✓", "success");
       setTimeout(() => document.getElementById("main-status").className = "status", 2000);
     } else {
@@ -517,7 +571,7 @@ async function loadFromDrive() {
 
 async function saveToDrive() {
   if (!accessToken) return;
-  const data = JSON.stringify({ providers, history });
+  const data = JSON.stringify({ providers, history, templates });
   try {
     if (driveFileId) {
       // Update existing file
@@ -565,7 +619,7 @@ function goTo(id) {
   prevScreen = document.querySelector(".screen.active")?.id || "screen-main";
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
-  if (id === "screen-providers") renderProvidersList();
+  if (id === "screen-providers") { renderProvidersList(); renderTemplatesList(); }
   if (id === "screen-history") renderHistory();
 }
 
@@ -606,8 +660,144 @@ function hideEditLoc(id) {
   if (box) box.style.display = 'none';
 }
 
+
+// ─── TEMPLATES ────────────────────────────────────────────
+let templates = [];
+
+function loadTemplates() {
+  try { return JSON.parse(localStorage.getItem("qc_templates") || "[]"); } catch(e) { return []; }
+}
+function saveTemplates() {
+  try { localStorage.setItem("qc_templates", JSON.stringify(templates)); } catch(e) {}
+  saveToDrive();
+}
+
+templates = loadTemplates();
+
+function renderTemplatesList() {
+  const el = document.getElementById("templates-list");
+  if (!templates.length) {
+    el.innerHTML = '<div style="font-size:13px;color:#888;padding:0.5rem 0;">No templates yet.</div>';
+    return;
+  }
+  el.innerHTML = templates.map(t => {
+    const p = providers.find(x => x.id === t.providerId);
+    return `<div class="provider-card" style="margin-bottom:0.5rem;">
+      <div style="flex:1;">
+        <span class="type-badge">${p ? p.type : "General"}</span>
+        <p style="font-size:14px;font-weight:600;color:#e8e8e8;margin-bottom:2px;">${t.title}</p>
+        <span style="font-size:12px;color:#888;">${p ? p.name : ""} · ${t.duration} min${t.notes ? " · " + t.notes : ""}</span>
+      </div>
+      <button class="btn-danger" onclick="deleteTemplate(${t.id})">🗑</button>
+    </div>`;
+  }).join("");
+}
+
+function toggleTemplateForm() {
+  const f = document.getElementById("template-form");
+  const open = f.style.display === "none";
+  f.style.display = open ? "block" : "none";
+  document.getElementById("add-template-btn").textContent = open ? "✕" : "＋";
+  if (open) {
+    // Populate provider dropdown
+    const sel = document.getElementById("tmpl-provider");
+    sel.innerHTML = '<option value="">— No specific provider —</option>' +
+      providers.map(p => `<option value="${p.id}">${p.name} (${p.type})</option>`).join("");
+  }
+}
+
+function saveTemplate() {
+  const title = document.getElementById("tmpl-title").value.trim();
+  const providerId = parseInt(document.getElementById("tmpl-provider").value) || null;
+  const duration = parseInt(document.getElementById("tmpl-duration").value);
+  const notes = document.getElementById("tmpl-notes").value.trim();
+  if (!title) { showStatus("template-status", "Please enter an appointment type.", "error"); return; }
+  templates.push({ id: Date.now(), title, providerId, duration, notes });
+  saveTemplates();
+  renderTemplatesList();
+  document.getElementById("tmpl-title").value = "";
+  document.getElementById("tmpl-notes").value = "";
+  toggleTemplateForm();
+  showStatus("template-status", "Template saved.", "success");
+}
+
+function deleteTemplate(id) {
+  templates = templates.filter(t => t.id !== id);
+  saveTemplates();
+  renderTemplatesList();
+}
+
+function renderTemplateSelect() {
+  const field = document.getElementById("template-field");
+  const sel = document.getElementById("template-select");
+  const pid = parseInt(document.getElementById("provider-select").value);
+  const relevant = templates.filter(t => !t.providerId || t.providerId === pid);
+  if (relevant.length) {
+    sel.innerHTML = '<option value="">— Use a template —</option>' +
+      relevant.map(t => `<option value="${t.id}">${t.title}</option>`).join("");
+    field.style.display = "block";
+  } else {
+    field.style.display = "none";
+  }
+}
+
+function applyTemplate() {
+  const id = parseInt(document.getElementById("template-select").value);
+  if (!id) return;
+  const t = templates.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById("appt-title").value = t.title;
+  document.getElementById("duration").value = t.duration;
+  if (t.notes) document.getElementById("notes").value = t.notes;
+  if (t.providerId && !document.getElementById("provider-select").value) {
+    document.getElementById("provider-select").value = t.providerId;
+    onProviderChange();
+  }
+  updateTitlePreview();
+}
+
+// ─── NEXT APPOINTMENT WIDGET ──────────────────────────────
+async function loadNextAppointment() {
+  if (!accessToken) return;
+  try {
+    const now = new Date().toISOString();
+    const resp = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now}&maxResults=5&singleEvents=true&orderBy=startTime`,
+      { headers: { Authorization: "Bearer " + accessToken } }
+    );
+    const data = await resp.json();
+    const next = (data.items || []).find(e => e.summary && e.summary.includes("@"));
+    if (next) {
+      const start = new Date(next.start.dateTime || next.start.date);
+      const now2 = new Date();
+      const diff = Math.ceil((start - now2) / (1000 * 60 * 60 * 24));
+      const countdown = diff === 0 ? "Today!" : diff === 1 ? "Tomorrow" : `In ${diff} days`;
+      const fmt = d => d.toLocaleString("en-US", { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
+      document.getElementById("next-appt-title").textContent = next.summary;
+      document.getElementById("next-appt-time").textContent = fmt(start);
+      document.getElementById("next-appt-countdown").textContent = countdown;
+      document.getElementById("next-appt-widget").style.display = "block";
+    }
+  } catch(e) { console.warn("Next appt error:", e); }
+}
+
+// ─── SIRI SHORTCUT PROMPT ─────────────────────────────────
+function checkSiriPrompt() {
+  const shown = localStorage.getItem("qc_siri_prompt");
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone;
+  if (isIOS && !isStandalone && !shown) {
+    setTimeout(() => {
+      showMainStatus("📱 Tip: Tap Share → Add to Home Screen for a native app experience + Siri shortcut!", "success");
+      localStorage.setItem("qc_siri_prompt", "1");
+    }, 3000);
+  }
+}
+
+
 // Apply dark mode on load
 document.documentElement.classList.add("dark");
+checkSiriPrompt();
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("dark-btn");
   if (btn) btn.textContent = "☀️";
@@ -632,6 +822,7 @@ function onProviderChange() {
   const p = providers.find(x => x.id === parseInt(document.getElementById("provider-select").value));
   if (p) document.getElementById("location").value = p.location;
   updateTitlePreview();
+  renderTemplateSelect();
 }
 
 function renderProvidersList() {
