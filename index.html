@@ -7,7 +7,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="QuickClinic"/>
-<link rel="apple-touch-icon" sizes="180x180" href="icon2.png"/>
+<link rel="apple-touch-icon" href="https://jayo-wong-code.github.io/quickclinic/icon.png"/>
+<link rel="apple-touch-icon" sizes="152x152" href="https://jayo-wong-code.github.io/quickclinic/icon.png"/>
+<link rel="apple-touch-icon" sizes="167x167" href="https://jayo-wong-code.github.io/quickclinic/icon.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="https://jayo-wong-code.github.io/quickclinic/icon.png"/>
 <meta name="theme-color" content="#1a3a1a"/>
 <title>QuickClinic</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -33,7 +36,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .field{margin-bottom:0.875rem;}
 .field label{display:block;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
 .field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;color:#1a1a1a;background:#fff;font-family:inherit;outline:none;transition:border-color 0.15s;}
-
 .field input:focus,.field select:focus,.field textarea:focus{border-color:#1a1a1a;}
 .field textarea{resize:none;height:68px;}
 .field .hint{font-size:11px;color:#aaa;margin-top:3px;}
@@ -184,75 +186,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .history-item{display:flex;align-items:center;}
 
 .next-appt-card{background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #2a2a4a;border-radius:12px;padding:1rem;margin-bottom:1rem;}
-
-
-
-
-
-
-
-
-
-  .app { width: 100vw; max-width: 100vw; }
-  .content { padding: 1rem 1rem 2rem; box-sizing: border-box; width: 100%; }
-  .field input, .field select, .field textarea { font-size: 16px; box-sizing: border-box; min-width: 0; }
-  .row { box-sizing: border-box; width: 100%; }
-}
-
-  .app { width: 100vw; max-width: 100vw; }
-  .content { padding: 1rem 1rem 2rem; box-sizing: border-box; width: 100%; }
-  .field input, .field select, .field textarea { font-size: 16px; width: 100%; box-sizing: border-box; }
-  #date-time-row { grid-template-columns: 1fr; }
-  #duration-buffer-row { grid-template-columns: 1fr 1fr; }
-}
-
-  .app { width: 100vw; max-width: 100vw; }
-  .content { padding: 1rem 1rem 2rem; box-sizing: border-box; width: 100%; }
-  .field input, .field select, .field textarea { font-size: 16px; width: 100%; box-sizing: border-box; }
-  #date-time-row { grid-template-columns: 1fr; }
-}
-
-  .app { width: 100vw; max-width: 100vw; }
-  .content { padding: 1rem 1rem 2rem; box-sizing: border-box; width: 100%; }
-  .field input, .field select, .field textarea { font-size: 16px; width: 100%; box-sizing: border-box; }
-}
-
-  .app { width: 100vw; max-width: 100vw; overflow: hidden; }
-  .content { padding: 1rem 1.25rem 2rem; box-sizing: border-box; width: 100%; }
-  .row { display: flex; flex-direction: column; gap: 0; }
-  .field input, .field select, .field textarea { font-size: 16px; width: 100%; box-sizing: border-box; }
-  .action-row { display: flex; gap: 8px; }
-}
-
-  .content { padding: 1rem 1rem 2rem; }
-  .row { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .field input, .field select, .field textarea { font-size: 16px; box-sizing: border-box; width: 100%; }
-  .action-row { gap: 8px; }
-}
-
-  .field input, .field select { font-size: 16px; }
-}
-
-  .field input, .field select { font-size: 16px; }
-}
-
-
-  .app { width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden; }
-  .content { padding: 1rem; box-sizing: border-box; width: 100%; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box; }
-  .field { min-width: 0; box-sizing: border-box; }
-  .field input, .field select, .field textarea { font-size: 16px; width: 100%; min-width: 0; box-sizing: border-box; }
-  .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-}
-
-  .app { width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden; }
-  .content { padding: 1rem; box-sizing: border-box; width: 100%; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box; }
-  .field { min-width: 0; box-sizing: border-box; }
-  .field input, .field select, .field textarea { font-size: 15px; width: 100%; min-width: 0; box-sizing: border-box; padding: 8px 10px; height: 42px; }
-  .field textarea { height: 68px; }
-  .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-}
 </style>
 </head>
 <body>
@@ -325,50 +258,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="title-preview" id="title-preview" style="display:none;"></div>
     </div>
 
-    <!-- Hidden real date/time inputs for form logic -->
-    <input type="hidden" id="date"/>
-    <input type="hidden" id="time"/>
-
-    <div class="field">
-      <label>Date</label>
-      <div class="row" style="gap:6px;">
-        <select id="date-month" onchange="updateCustomDateTime()">
-          <option value="">Month</option>
-          <option value="01">January</option><option value="02">February</option>
-          <option value="03">March</option><option value="04">April</option>
-          <option value="05">May</option><option value="06">June</option>
-          <option value="07">July</option><option value="08">August</option>
-          <option value="09">September</option><option value="10">October</option>
-          <option value="11">November</option><option value="12">December</option>
-        </select>
-        <select id="date-day" onchange="updateCustomDateTime()">
-          <option value="">Day</option>
-        </select>
-        <select id="date-year" onchange="updateCustomDateTime()">
-          <option value="">Year</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="field">
-      <label>Time</label>
-      <div class="row" style="gap:6px;">
-        <select id="time-hour" onchange="updateCustomDateTime()">
-          <option value="">Hr</option>
-          <option value="01">1</option><option value="02">2</option><option value="03">3</option>
-          <option value="04">4</option><option value="05">5</option><option value="06">6</option>
-          <option value="07">7</option><option value="08">8</option><option value="09">9</option>
-          <option value="10">10</option><option value="11">11</option><option value="12">12</option>
-        </select>
-        <select id="time-minute" onchange="updateCustomDateTime()">
-          <option value="00">:00</option><option value="15">:15</option>
-          <option value="30">:30</option><option value="45">:45</option>
-        </select>
-        <select id="time-ampm" onchange="updateCustomDateTime()">
-          <option value="AM">AM</option>
-          <option value="PM">PM</option>
-        </select>
-      </div>
+    <div class="row">
+      <div class="field"><label>Date</label><input type="date" id="date" onchange="updateTitlePreview()"/></div>
+      <div class="field"><label>Time</label><input type="time" id="time" onchange="updateTitlePreview()"/></div>
     </div>
 
     <div class="row">
@@ -906,69 +798,6 @@ function checkSiriPrompt() {
 }
 
 
-
-// ─── CUSTOM DATE/TIME PICKER ──────────────────────────────
-function initCustomDateTime() {
-  // Populate years (current year + 2)
-  const yearSel = document.getElementById("date-year");
-  const currentYear = new Date().getFullYear();
-  for (let y = currentYear; y <= currentYear + 2; y++) {
-    const opt = document.createElement("option");
-    opt.value = y;
-    opt.textContent = y;
-    yearSel.appendChild(opt);
-  }
-  // Set defaults to today + next hour
-  const now = new Date();
-  const pad = n => String(n).padStart(2, "0");
-  document.getElementById("date-month").value = pad(now.getMonth() + 1);
-  populateDays();
-  document.getElementById("date-day").value = pad(now.getDate());
-  document.getElementById("date-year").value = now.getFullYear();
-  const nextHour = now.getHours() + 1;
-  const h12 = nextHour % 12 || 12;
-  document.getElementById("time-hour").value = pad(h12);
-  document.getElementById("time-minute").value = "00";
-  document.getElementById("time-ampm").value = nextHour >= 12 ? "PM" : "AM";
-  updateCustomDateTime();
-}
-
-function populateDays() {
-  const month = parseInt(document.getElementById("date-month").value) || 1;
-  const year = parseInt(document.getElementById("date-year").value) || new Date().getFullYear();
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const daySel = document.getElementById("date-day");
-  const current = daySel.value;
-  daySel.innerHTML = "<option value=''>Day</option>";
-  for (let d = 1; d <= daysInMonth; d++) {
-    const opt = document.createElement("option");
-    opt.value = String(d).padStart(2, "0");
-    opt.textContent = d;
-    daySel.appendChild(opt);
-  }
-  if (current && parseInt(current) <= daysInMonth) daySel.value = current;
-}
-
-function updateCustomDateTime() {
-  populateDays();
-  const month = document.getElementById("date-month").value;
-  const day = document.getElementById("date-day").value;
-  const year = document.getElementById("date-year").value;
-  if (month && day && year) {
-    document.getElementById("date").value = year + "-" + month + "-" + day;
-  }
-  const hour = document.getElementById("time-hour").value;
-  const minute = document.getElementById("time-minute").value;
-  const ampm = document.getElementById("time-ampm").value;
-  if (hour && minute) {
-    let h24 = parseInt(hour);
-    if (ampm === "PM" && h24 !== 12) h24 += 12;
-    if (ampm === "AM" && h24 === 12) h24 = 0;
-    document.getElementById("time").value = String(h24).padStart(2, "0") + ":" + minute;
-  }
-  updateTitlePreview();
-}
-
 // Apply dark mode on load
 document.documentElement.classList.add("dark");
 checkSiriPrompt();
@@ -979,7 +808,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ─── DEFAULTS ─────────────────────────────────────────────
 function setDefaults() {
-  initCustomDateTime();
+  const d = new Date(), pad = n => String(n).padStart(2,"0");
+  document.getElementById("date").value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  document.getElementById("time").value = `${pad(d.getHours()+1)}:00`;
+  updateTitlePreview();
 }
 
 // ─── PROVIDERS ────────────────────────────────────────────
