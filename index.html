@@ -807,7 +807,8 @@ document.addEventListener("DOMContentLoaded", () => {
 function setDefaults() {
   const d = new Date(), pad = n => String(n).padStart(2,"0");
   document.getElementById("date").value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  document.getElementById("time").value = `${pad(d.getHours()+1)}:00`;
+  const nextHour = (d.getHours() + 1) % 24;
+  document.getElementById("time").value = `${pad(nextHour)}:00`;
   updateTitlePreview();
 }
 
