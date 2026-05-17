@@ -1,10 +1,1386 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<script>
-  window.location.replace("https://jayo-wong-code.github.io/quickclinic/");
-</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<link rel="manifest" href="manifest.json"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="QuickClinic"/>
+<link rel="apple-touch-icon" sizes="180x180" href="icon2.png"/>
+<meta name="theme-color" content="#1a3a1a"/>
+<title>QuickClinic</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:0;}
+.app{background:#fff;width:100%;max-width:430px;min-height:100vh;}
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* Topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem 0.75rem;border-bottom:1px solid #e8e8e8;}
+.topbar h1{font-size:17px;font-weight:600;color:#1a1a1a;display:flex;align-items:center;gap:6px;}
+.topbar-actions{display:flex;align-items:center;gap:4px;}
+.icon-btn{background:none;border:none;cursor:pointer;color:#666;padding:7px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.icon-btn:hover{background:#f0f0f0;}
+
+/* Content */
+.content{padding:1rem 1.25rem 2rem;}
+
+/* Fields */
+.field{margin-bottom:0.875rem;}
+.field label{display:block;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;color:#1a1a1a;background:#fff;font-family:inherit;outline:none;transition:border-color 0.15s;}
+
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#1a1a1a;}
+.field textarea{resize:none;height:68px;}
+.field .hint{font-size:11px;color:#aaa;margin-top:3px;}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.divider{border:none;border-top:1px solid #f0f0f0;margin:1rem 0;}
+.section-label{font-size:11px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem;}
+
+/* Buttons */
+.btn-primary{width:100%;background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:12px 16px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;transition:opacity 0.15s;}
+.btn-primary:hover{opacity:0.85;}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+.btn-secondary{background:#fff;color:#1a1a1a;border:1px solid #ddd;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;transition:background 0.15s;}
+.btn-secondary:hover{background:#f5f5f5;}
+.btn-danger{background:#fff;color:#d32f2f;border:1px solid #fca5a5;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit;}
+.btn-danger:hover{background:#fef2f2;}
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:1rem;}
+
+/* Status */
+.status{display:none;padding:10px 13px;border-radius:8px;font-size:13px;margin-top:0.875rem;}
+.status.success{display:block;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;}
+.status.error{display:block;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
+.status.loading{display:block;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;}
+
+/* Lock screen */
+.lock-screen{display:flex;flex-direction:column;align-items:center;padding:4rem 1.5rem 1.5rem;}
+.lock-icon{width:56px;height:56px;border-radius:50%;background:#f5f5f5;border:1px solid #e8e8e8;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;font-size:24px;}
+.lock-screen h2{font-size:20px;font-weight:600;color:#1a1a1a;margin-bottom:6px;}
+.lock-screen p{font-size:14px;color:#888;margin-bottom:1.75rem;text-align:center;}
+.lock-error{font-size:13px;color:#d32f2f;text-align:center;margin-top:0.75rem;min-height:18px;}
+
+/* Google sign-in card */
+.google-card{background:#f9f9f9;border-radius:12px;border:1px solid #e8e8e8;padding:1rem;margin-bottom:1rem;}
+.google-row{display:flex;align-items:center;justify-content:space-between;}
+.google-info{display:flex;align-items:center;gap:10px;}
+.google-avatar{width:32px;height:32px;border-radius:50%;background:#e8f0fe;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.google-name{font-size:13px;font-weight:600;color:#1a1a1a;}
+.google-sub{font-size:12px;color:#888;}
+
+/* Title preview */
+.title-preview{font-size:12px;color:#666;margin-top:4px;padding:6px 10px;background:#f9f9f9;border-radius:8px;border:1px solid #e8e8e8;}
+
+/* Location autocomplete */
+.location-wrap{position:relative;}
+.loc-suggestions{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:8px;z-index:100;overflow:hidden;margin-top:2px;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+.loc-suggestion{padding:9px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;color:#1a1a1a;border-bottom:1px solid #f5f5f5;}
+.loc-suggestion:last-child{border-bottom:none;}
+.loc-suggestion:hover{background:#f9f9f9;}
+.loc-sub{font-size:11px;color:#888;display:block;}
+
+/* Work email */
+.work-email-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;}
+.checkbox-row{display:flex;align-items:center;gap:7px;cursor:pointer;}
+.checkbox-row input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#1a1a1a;}
+.checkbox-row span{font-size:13px;color:#666;}
+.work-email-field{transition:opacity 0.15s;}
+.work-email-field.disabled{opacity:0.4;pointer-events:none;}
+
+/* Provider cards */
+.provider-card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:0.875rem 1rem;margin-bottom:0.625rem;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.provider-info p{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:2px;}
+.provider-info span{font-size:12px;color:#888;}
+.type-badge{font-size:11px;padding:2px 8px;border-radius:20px;background:#eff6ff;color:#1d4ed8;font-weight:600;display:inline-block;margin-bottom:4px;}
+.add-form{background:#f9f9f9;border-radius:12px;border:1px solid #e8e8e8;padding:1rem;margin-top:1rem;}
+.add-form h3{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:0.875rem;}
+
+/* History */
+.history-item{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:0.875rem 1rem;margin-bottom:0.625rem;cursor:pointer;transition:background 0.15s;}
+.history-item:hover{background:#f9f9f9;}
+.history-title{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:3px;}
+.history-sub{font-size:12px;color:#888;}
+.history-detail-card{background:#f9f9f9;border-radius:12px;border:1px solid #e8e8e8;padding:1rem;margin-top:0.75rem;}
+.detail-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0f0;align-items:flex-start;}
+.detail-row:last-child{border-bottom:none;}
+.detail-icon{font-size:16px;color:#888;margin-top:1px;flex-shrink:0;}
+.detail-label{font-size:11px;color:#aaa;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.04em;}
+.detail-value{font-size:13px;color:#1a1a1a;}
+
+/* Confirmation */
+.confirm-card{background:#f9f9f9;border-radius:12px;border:1px solid #e8e8e8;padding:1.25rem;margin-bottom:1rem;}
+.confirm-icon{width:48px;height:48px;border-radius:50%;background:#f0fdf4;border:1px solid #bbf7d0;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:22px;}
+.confirm-title{font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:1rem;}
+
+/* Empty state */
+.empty-state{text-align:center;padding:3rem 1rem;color:#aaa;font-size:13px;}
+.empty-icon{font-size:36px;display:block;margin-bottom:0.75rem;}
+
+/* Dark mode */
+.dark body,.dark .app{background:#111;color:#e8e8e8;}
+.dark .topbar{border-color:#2a2a2a;}
+.dark .topbar h1{color:#e8e8e8;}
+.dark .icon-btn{color:#aaa;}
+.dark .icon-btn:hover{background:#2a2a2a;}
+.dark .field input,.dark .field select,.dark .field textarea{background:#1a1a1a;border-color:#333;color:#e8e8e8;}
+.dark .field input:focus,.dark .field select:focus{border-color:#666;}
+.dark .field label{color:#888;}
+.dark .btn-primary{background:#e8e8e8;color:#111;}
+.dark .btn-secondary{background:#1a1a1a;color:#e8e8e8;border-color:#333;}
+.dark .btn-secondary:hover{background:#2a2a2a;}
+.dark .google-card,.dark .add-form,.dark .confirm-card,.dark .history-detail-card{background:#1a1a1a;border-color:#2a2a2a;}
+.dark .google-name{color:#e8e8e8;}
+.dark .provider-card,.dark .history-item{background:#1a1a1a;border-color:#2a2a2a;}
+.dark .history-item:hover{background:#222;}
+.dark .provider-info p,.dark .history-title{color:#e8e8e8;}
+.dark .title-preview{background:#1a1a1a;border-color:#333;color:#aaa;}
+.dark .loc-suggestions{background:#1a1a1a;border-color:#333;}
+.dark .loc-suggestion{color:#e8e8e8;border-color:#2a2a2a;}
+.dark .loc-suggestion:hover{background:#222;}
+.dark .detail-value{color:#e8e8e8;}
+.dark .detail-row{border-color:#2a2a2a;}
+.dark .confirm-title{color:#e8e8e8;}
+.dark .lock-screen h2{color:#e8e8e8;}
+.dark .lock-icon{background:#1a1a1a;border-color:#2a2a2a;}
+.dark .divider{border-color:#2a2a2a;}
+
+/* Google Places Autocomplete dropdown */
+.pac-container {
+  z-index: 9999 !important;
+  position: fixed !important;
+  background: #1a1a1a !important;
+  border: 1px solid #444 !important;
+  border-radius: 8px !important;
+  margin-top: 2px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  overflow: hidden !important;
+}
+.pac-item {
+  padding: 10px 12px !important;
+  font-size: 13px !important;
+  color: #e8e8e8 !important;
+  cursor: pointer !important;
+  border-top: 1px solid #2a2a2a !important;
+  background: #1a1a1a !important;
+}
+.pac-item:first-child { border-top: none !important; }
+.pac-item:hover, .pac-item-selected { background: #2a2a2a !important; }
+.pac-item-query { font-size: 13px !important; color: #e8e8e8 !important; font-weight: 600 !important; }
+.pac-matched { font-weight: 700 !important; color: #fff !important; }
+.pac-icon { display: none !important; }
+.pac-logo:after { display: none !important; }
+
+
+.edit-form{background:var(--edit-bg,#f9f9f9);border:1px solid #e8e8e8;border-radius:12px;padding:1rem;margin-bottom:0.625rem;margin-top:-0.5rem;}
+.dark .edit-form{background:#1a1a1a;border-color:#333;}
+
+.history-month-header{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.08em;padding:0.75rem 0 0.375rem;border-bottom:1px solid #e8e8e8;margin-bottom:0.5rem;}
+.dark .history-month-header{color:#666;border-color:#2a2a2a;}
+.history-item{display:flex;align-items:center;}
+
+.next-appt-card{background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #2a2a4a;border-radius:12px;padding:1rem;margin-bottom:1rem;}
+
+
+
+
+
+
+
+
+
+  .app { width: 100vw; max-width: 100vw; }
+  .content { padding: 1rem 1rem 2rem; box-sizing: border-box; width: 100%; }
+  .field input, .field select, .field textarea { font-size: 16px; box-sizing: border-box; min-width: 0; }
+  .row { box-sizing: border-box; width: 100%; }
+}
+
+  .app { width: 100vw; max-width: 100vw; }
+  .content { padding: 1rem 1rem 2rem; box-sizing: border-box; width: 100%; }
+  .field input, .field select, .field textarea { font-size: 16px; width: 100%; box-sizing: border-box; }
+  #date-time-row { grid-template-columns: 1fr; }
+  #duration-buffer-row { grid-template-columns: 1fr 1fr; }
+}
+
+  .app { width: 100vw; max-width: 100vw; }
+  .content { padding: 1rem 1rem 2rem; box-sizing: border-box; width: 100%; }
+  .field input, .field select, .field textarea { font-size: 16px; width: 100%; box-sizing: border-box; }
+  #date-time-row { grid-template-columns: 1fr; }
+}
+
+  .app { width: 100vw; max-width: 100vw; }
+  .content { padding: 1rem 1rem 2rem; box-sizing: border-box; width: 100%; }
+  .field input, .field select, .field textarea { font-size: 16px; width: 100%; box-sizing: border-box; }
+}
+
+  .app { width: 100vw; max-width: 100vw; overflow: hidden; }
+  .content { padding: 1rem 1.25rem 2rem; box-sizing: border-box; width: 100%; }
+  .row { display: flex; flex-direction: column; gap: 0; }
+  .field input, .field select, .field textarea { font-size: 16px; width: 100%; box-sizing: border-box; }
+  .action-row { display: flex; gap: 8px; }
+}
+
+  .content { padding: 1rem 1rem 2rem; }
+  .row { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .field input, .field select, .field textarea { font-size: 16px; box-sizing: border-box; width: 100%; }
+  .action-row { gap: 8px; }
+}
+
+  .field input, .field select { font-size: 16px; }
+}
+
+  .field input, .field select { font-size: 16px; }
+}
+
+
+  .app { width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden; }
+  .content { padding: 1rem; box-sizing: border-box; width: 100%; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box; }
+  .field { min-width: 0; box-sizing: border-box; }
+  .field input, .field select, .field textarea { font-size: 16px; width: 100%; min-width: 0; box-sizing: border-box; }
+  .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+}
+
+  .app { width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden; }
+  .content { padding: 1rem; box-sizing: border-box; width: 100%; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box; }
+  .field { min-width: 0; box-sizing: border-box; }
+  .field input, .field select, .field textarea { font-size: 15px; width: 100%; min-width: 0; box-sizing: border-box; padding: 8px 10px; height: 42px; }
+  .field textarea { height: 68px; }
+  .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+}
+</style>
 </head>
-<body></body>
+<body>
+<div class="app" id="app">
+
+<!-- Lock screen -->
+<div class="screen active" id="screen-lock">
+  <div class="lock-screen">
+    <div class="lock-icon">🔒</div>
+    <h2>QuickClinic</h2>
+    <p>Enter your password to continue</p>
+    <div class="field" style="width:100%;">
+      <input type="password" id="pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')checkPassword()" style="width:100%;"/>
+    </div>
+    <button class="btn-primary" style="margin-top:0.75rem;width:100%;" onclick="checkPassword()">Unlock</button>
+    <p class="lock-error" id="lock-error"></p>
+  </div>
+</div>
+
+<!-- Main screen -->
+<div class="screen" id="screen-main">
+  <div class="topbar">
+    <h1>📅 QuickClinic</h1>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="goTo('screen-history')" title="History">🕐</button>
+      <button class="icon-btn" onclick="goTo('screen-providers')" title="Care Team">👤</button>
+      <button class="icon-btn" onclick="toggleDark()" id="dark-btn" title="Dark mode">🌙</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <div id="next-appt-widget" style="display:none;" class="next-appt-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Next Appointment</span>
+        <span id="next-appt-countdown" style="font-size:11px;color:#888;"></span>
+      </div>
+      <div id="next-appt-title" style="font-size:15px;font-weight:600;color:#e8e8e8;margin-top:6px;"></div>
+      <div id="next-appt-time" style="font-size:13px;color:#aaa;margin-top:3px;"></div>
+      <div id="next-appt-provider" style="font-size:12px;color:#888;margin-top:2px;"></div>
+    </div>
+
+    <div class="google-card">
+      <div class="google-row">
+        <div class="google-info">
+          <div class="google-avatar">G</div>
+          <div>
+            <div class="google-name">Google account</div>
+            <div class="google-sub" id="account-status">Not signed in</div>
+          </div>
+        </div>
+        <button class="btn-secondary" id="auth-btn" style="padding:6px 14px;font-size:13px;" onclick="handleAuth()">Sign in</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Care Team</label>
+      <select id="provider-select" onchange="onProviderChange()"></select>
+    </div>
+
+    <div class="field" id="template-field" style="display:none;">
+      <label>Template</label>
+      <select id="template-select" onchange="applyTemplate()">
+        <option value="">— Use a template —</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Appointment type</label>
+      <input type="text" id="appt-title" placeholder="e.g. Blood Pressure" oninput="updateTitlePreview()"/>
+      <div class="title-preview" id="title-preview" style="display:none;"></div>
+    </div>
+
+    <!-- Hidden real date/time inputs for form logic -->
+    <input type="hidden" id="date"/>
+    <input type="hidden" id="time"/>
+
+    <div class="field">
+      <label>Date</label>
+      <div class="row" style="gap:6px;">
+        <select id="date-month" onchange="updateCustomDateTime()">
+          <option value="">Month</option>
+          <option value="01">January</option><option value="02">February</option>
+          <option value="03">March</option><option value="04">April</option>
+          <option value="05">May</option><option value="06">June</option>
+          <option value="07">July</option><option value="08">August</option>
+          <option value="09">September</option><option value="10">October</option>
+          <option value="11">November</option><option value="12">December</option>
+        </select>
+        <select id="date-day" onchange="updateCustomDateTime()">
+          <option value="">Day</option>
+        </select>
+        <select id="date-year" onchange="updateCustomDateTime()">
+          <option value="">Year</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Time</label>
+      <div class="row" style="gap:6px;">
+        <select id="time-hour" onchange="updateCustomDateTime()">
+          <option value="">Hr</option>
+          <option value="01">1</option><option value="02">2</option><option value="03">3</option>
+          <option value="04">4</option><option value="05">5</option><option value="06">6</option>
+          <option value="07">7</option><option value="08">8</option><option value="09">9</option>
+          <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+        </select>
+        <select id="time-minute" onchange="updateCustomDateTime()">
+          <option value="00">:00</option><option value="15">:15</option>
+          <option value="30">:30</option><option value="45">:45</option>
+        </select>
+        <select id="time-ampm" onchange="updateCustomDateTime()">
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Duration</label>
+        <select id="duration">
+          <option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option>
+          <option value="60" selected>1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Buffer</label>
+        <select id="buffer">
+          <option value="0">None</option><option value="15">15 min</option><option value="30" selected>30 min</option>
+          <option value="45">45 min</option><option value="60">1 hour</option>
+        </select>
+        <p class="hint">Before &amp; after</p>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Location</label>
+      <div class="location-wrap" id="loc-wrap">
+        <input type="text" id="location" placeholder="Search or enter address..." oninput="handleLocInput()" onblur="setTimeout(hideLoc,200)" autocomplete="off"/>
+        <div class="loc-suggestions" id="loc-suggestions" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="field"><label>Notes</label><textarea id="notes" placeholder="Prep instructions, reminders..."></textarea></div>
+
+    <hr class="divider"/>
+    <p class="section-label">Work calendar</p>
+    <div class="work-email-row">
+      <span style="font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em;">Send .ics to work</span>
+      <label class="checkbox-row">
+        <input type="checkbox" id="send-work" checked onchange="toggleWorkEmail()"/>
+        <span id="chk-label">Yes, send it</span>
+      </label>
+    </div>
+    <div class="work-email-field" id="work-email-field">
+      <input type="email" id="work-email" value="justin.wong@visa.com" readonly style="color:#888;cursor:default;"/>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-secondary" onclick="handlePreview()">👁 Preview</button>
+      <button class="btn-primary" onclick="handleCreate()" id="book-btn">✓ Book it</button>
+    </div>
+    <div class="status" id="main-status"></div>
+  </div>
+</div>
+
+<!-- Care Team screen -->
+<div class="screen" id="screen-providers">
+  <div class="topbar">
+    <h1 style="cursor:pointer;" onclick="goTo('screen-main')">← Care Team</h1>
+    <button class="icon-btn" onclick="toggleAddForm()" title="Add care team member" id="add-icon-btn">＋</button>
+  </div>
+  <div class="content">
+    <div id="providers-list"></div>
+
+    <div style="margin-top:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+        <span style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Appointment Templates</span>
+        <button class="icon-btn" onclick="toggleTemplateForm()" id="add-template-btn" title="Add template">＋</button>
+      </div>
+      <div id="templates-list"></div>
+      <div class="add-form" id="template-form" style="display:none;">
+        <h3>Add template</h3>
+        <div class="field"><label>Care Team Member</label>
+          <select id="tmpl-provider"></select>
+        </div>
+        <div class="field"><label>Appointment type</label>
+          <input type="text" id="tmpl-title" placeholder="e.g. Skin check"/></div>
+        <div class="field"><label>Duration</label>
+          <select id="tmpl-duration">
+            <option value="15">15 min</option><option value="30">30 min</option>
+            <option value="45">45 min</option><option value="60" selected>1 hour</option>
+            <option value="90">1.5 hours</option><option value="120">2 hours</option>
+          </select>
+        </div>
+        <div class="field"><label>Notes</label>
+          <input type="text" id="tmpl-notes" placeholder="e.g. Bring insurance card"/></div>
+        <button class="btn-primary" style="margin-top:0.5rem;" onclick="saveTemplate()">✓ Save template</button>
+        <div class="status" id="template-status"></div>
+      </div>
+    </div>
+    <div class="add-form" id="add-form" style="display:none;">
+      <h3>Add care team</h3>
+      <div class="field"><label>Name</label><input type="text" id="new-name" placeholder="e.g. Dr. Sarah Chen"/></div>
+      <div class="field">
+        <label>Type</label>
+        <select id="new-type">
+          <option>Primary Care</option><option>Dermatologist</option><option>Dentist</option>
+          <option>Optometrist</option><option>Cardiologist</option><option>Orthopedist</option>
+          <option>Physical Therapist</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Facility / location</label>
+        <div class="location-wrap" id="new-loc-wrap">
+          <input type="text" id="new-location" placeholder="Search for a place..." oninput="handleNewLocInput()" onblur="setTimeout(hideNewLoc,200)" autocomplete="off"/>
+          <div class="loc-suggestions" id="new-loc-suggestions" style="display:none;"></div>
+        </div>
+      </div>
+      <button class="btn-primary" style="margin-top:0.5rem;" onclick="saveProvider()">✓ Save</button>
+      <div class="status" id="provider-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- History screen -->
+<div class="screen" id="screen-history">
+  <div class="topbar">
+    <h1 style="cursor:pointer;" onclick="goBack()">← History</h1>
+  </div>
+  <div class="content">
+    <div id="history-list"></div>
+    <div id="history-detail" style="display:none;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.75rem;">
+        <button class="icon-btn" onclick="closeDetail()">←</button>
+        <span style="font-size:14px;font-weight:600;color:#1a1a1a;" id="detail-title"></span>
+      </div>
+      <div class="history-detail-card" id="detail-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation screen -->
+<div class="screen" id="screen-confirm">
+  <div class="topbar"><h1>📅 QuickClinic</h1></div>
+  <div class="content">
+    <div class="confirm-card">
+      <div class="confirm-icon">✓</div>
+      <p class="confirm-title" id="confirm-title"></p>
+      <div id="confirm-details"></div>
+    </div>
+    <button class="btn-primary" onclick="bookAnother()">＋ Book another</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────
+const APP_PASSWORD = "demo1234"; // Change this to your real password
+const WORK_EMAIL = "justin.wong@visa.com";
+const CLIENT_ID = "659099292112-4qjgd6qb97s63lhmjiege3r2t66sp3ca.apps.googleusercontent.com";
+const SCOPES = "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/drive.file";
+const MAPS_KEY = "AIzaSyBjr-2tYid66V57i1FO-bVt_6o2LsTE6NI";
+
+// ─── STATE ────────────────────────────────────────────────
+let accessToken = null;
+let driveFileId = null;
+let isDark = true;
+let prevScreen = "screen-main";
+let placesService = null;
+
+const DEFAULT_PROVIDERS = [
+  {id:1, name:"Dr. Sarah Chen", type:"Primary Care", location:"MemorialCare Medical Group, 9920 Talbert Ave, Fountain Valley, CA"},
+  {id:2, name:"Dr. James Park", type:"Dermatologist", location:"Hoag Medical Group, 500 Superior Ave, Newport Beach, CA"},
+  {id:3, name:"Dr. Lisa Nguyen", type:"Dentist", location:"Huntington Beach Dental, 17772 Beach Blvd, Huntington Beach, CA"},
+];
+
+function loadProviders() {
+  try {
+    const saved = localStorage.getItem("qc_providers");
+    return saved ? JSON.parse(saved) : DEFAULT_PROVIDERS;
+  } catch(e) { return DEFAULT_PROVIDERS; }
+}
+
+function saveProviders() {
+  try { localStorage.setItem("qc_providers", JSON.stringify(providers)); } catch(e) {}
+  saveToDrive();
+}
+
+function loadHistory() {
+  try {
+    const saved = localStorage.getItem("qc_history");
+    return saved ? JSON.parse(saved) : [];
+  } catch(e) { return []; }
+}
+
+function saveHistory() {
+  try { localStorage.setItem("qc_history", JSON.stringify(history)); } catch(e) {}
+  saveToDrive();
+}
+
+let providers = loadProviders();
+let history = loadHistory();
+
+// ─── PLACES AUTOCOMPLETE ──────────────────────────
+const MAPS_API_KEY = "AIzaSyBjr-2tYid66V57i1FO-bVt_6o2LsTE6NI";
+
+async function fetchPlaces(query) {
+  try {
+    const resp = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": MAPS_API_KEY,
+      },
+      body: JSON.stringify({ input: query, includedRegionCodes: ["us"] })
+    });
+    const data = await resp.json();
+    return data.suggestions || [];
+  } catch(e) { return []; }
+}
+
+async function handleLocInput() {
+  const val = document.getElementById("location").value.trim();
+  await showPlaceSuggestions(val, "location", "loc-suggestions");
+}
+
+async function handleNewLocInput() {
+  const val = document.getElementById("new-location").value.trim();
+  await showPlaceSuggestions(val, "new-location", "new-loc-suggestions");
+}
+
+async function showPlaceSuggestions(val, inputId, boxId) {
+  const box = document.getElementById(boxId);
+  if (val.length < 2) { box.style.display = "none"; return; }
+  const suggestions = await fetchPlaces(val);
+  if (!suggestions.length) { box.style.display = "none"; return; }
+  box.innerHTML = suggestions.slice(0,5).map(s => {
+    const main = s.placePrediction?.structuredFormat?.mainText?.text || s.placePrediction?.text?.text || "";
+    const secondary = s.placePrediction?.structuredFormat?.secondaryText?.text || "";
+    const full = secondary ? main + ", " + secondary : main;
+    const safeFull = full.replace(/'/g, "\'");
+    return `<div class="loc-suggestion" onmousedown="selectLoc('${inputId}','${boxId}','${safeFull}')">`
+      + `<span style="margin-right:6px">&#128205;</span>`
+      + `<div><span>${main}</span><span class="loc-sub">${secondary}</span></div></div>`;
+  }).join("");
+  box.style.display = "block";
+}
+
+function hideLoc() { document.getElementById("loc-suggestions").style.display = "none"; }
+function hideNewLoc() { document.getElementById("new-loc-suggestions").style.display = "none"; }
+
+// ─── AUTH ─────────────────────────────────────────────────
+function handleAuth() {
+  if (accessToken) {
+    accessToken = null;
+    driveFileId = null;
+    document.getElementById("auth-btn").textContent = "Sign in";
+    document.getElementById("account-status").textContent = "Not signed in";
+    document.getElementById("account-status").style.color = "";
+    return;
+  }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { showMainStatus("Sign-in failed: " + resp.error, "error"); return; }
+      accessToken = resp.access_token;
+      // Get user email
+      fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: "Bearer " + accessToken }
+      }).then(r => r.json()).then(info => {
+        document.getElementById("account-status").textContent = info.email || "Signed in";
+        document.getElementById("account-status").style.color = "#166534";
+        document.getElementById("auth-btn").textContent = "Disconnect";
+      });
+      // Load data from Drive
+      await loadFromDrive();
+      loadNextAppointment();
+      renderProviderSelect();
+      renderProvidersList();
+      renderHistory();
+    }
+  });
+  client.requestAccessToken();
+}
+
+// ─── GOOGLE DRIVE SYNC ────────────────────────────────────
+const DRIVE_FILENAME = "quickclinic-data.json";
+
+async function loadFromDrive() {
+  try {
+    showMainStatus("Loading your data...", "loading");
+    // Search for existing file
+    const search = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILENAME}'+and+trashed=false&fields=files(id,name)`,
+      { headers: { Authorization: "Bearer " + accessToken } }
+    );
+    const result = await search.json();
+    if (result.files && result.files.length > 0) {
+      driveFileId = result.files[0].id;
+      // Load file contents
+      const fileResp = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
+        { headers: { Authorization: "Bearer " + accessToken } }
+      );
+      const data = await fileResp.json();
+      if (data.providers) providers = data.providers;
+      if (data.history) history = data.history;
+      if (data.templates) templates = data.templates;
+      showMainStatus("Data loaded from Google Drive ✓", "success");
+      setTimeout(() => document.getElementById("main-status").className = "status", 2000);
+    } else {
+      // No file yet — save current data to Drive
+      showMainStatus("Setting up your Drive storage...", "loading");
+      await saveToDrive();
+      showMainStatus("Drive storage set up ✓", "success");
+      setTimeout(() => document.getElementById("main-status").className = "status", 2000);
+    }
+  } catch(e) {
+    console.warn("Drive load error:", e);
+    document.getElementById("main-status").className = "status";
+  }
+}
+
+async function saveToDrive() {
+  if (!accessToken) return;
+  const data = JSON.stringify({ providers, history, templates });
+  try {
+    if (driveFileId) {
+      // Update existing file
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
+        method: "PATCH",
+        headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },
+        body: data
+      });
+    } else {
+      // Create new file
+      const meta = await fetch("https://www.googleapis.com/drive/v3/files", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },
+        body: JSON.stringify({ name: DRIVE_FILENAME, mimeType: "application/json" })
+      });
+      const metaResult = await meta.json();
+      driveFileId = metaResult.id;
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
+        method: "PATCH",
+        headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },
+        body: data
+      });
+    }
+  } catch(e) {
+    console.warn("Drive save error:", e);
+  }
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────
+function checkPassword() {
+  const val = document.getElementById("pw-input").value;
+  if (val === APP_PASSWORD) {
+    goTo("screen-main");
+    setDefaults();
+    renderProviderSelect();
+    renderProvidersList();
+    renderHistory();
+  } else {
+    document.getElementById("lock-error").textContent = "Incorrect password. Try again.";
+    document.getElementById("pw-input").value = "";
+  }
+}
+
+function goTo(id) {
+  prevScreen = document.querySelector(".screen.active")?.id || "screen-main";
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  if (id === "screen-providers") { renderProvidersList(); renderTemplatesList(); }
+  if (id === "screen-history") renderHistory();
+}
+
+function goBack() { goTo(prevScreen); }
+
+function toggleDark() {
+  isDark = !isDark;
+  document.documentElement.classList.toggle("dark", isDark);
+  document.getElementById("dark-btn").textContent = isDark ? "☀️" : "🌙";
+}
+
+// Init Places when page ready
+
+function editProvider(id) {
+  // Close any other open edit forms
+  document.querySelectorAll('.edit-form').forEach(f => f.style.display='none');
+  document.getElementById('edit-' + id).style.display = 'block';
+}
+function cancelEdit(id) {
+  document.getElementById('edit-' + id).style.display = 'none';
+}
+function saveEdit(id) {
+  const p = providers.find(x => x.id === id);
+  if (!p) return;
+  p.name = document.getElementById('edit-name-' + id).value.trim() || p.name;
+  p.type = document.getElementById('edit-type-' + id).value;
+  p.location = document.getElementById('edit-loc-' + id).value.trim();
+  saveProviders();
+  renderProvidersList();
+  renderProviderSelect();
+}
+async function handleEditLocInput(id) {
+  const val = document.getElementById('edit-loc-' + id).value.trim();
+  await showPlaceSuggestions(val, 'edit-loc-' + id, 'edit-loc-suggestions-' + id);
+}
+function hideEditLoc(id) {
+  const box = document.getElementById('edit-loc-suggestions-' + id);
+  if (box) box.style.display = 'none';
+}
+
+
+// ─── TEMPLATES ────────────────────────────────────────────
+let templates = [];
+
+function loadTemplates() {
+  try { return JSON.parse(localStorage.getItem("qc_templates") || "[]"); } catch(e) { return []; }
+}
+function saveTemplates() {
+  try { localStorage.setItem("qc_templates", JSON.stringify(templates)); } catch(e) {}
+  saveToDrive();
+}
+
+templates = loadTemplates();
+
+function renderTemplatesList() {
+  const el = document.getElementById("templates-list");
+  if (!templates.length) {
+    el.innerHTML = '<div style="font-size:13px;color:#888;padding:0.5rem 0;">No templates yet.</div>';
+    return;
+  }
+  el.innerHTML = templates.map(t => {
+    const p = providers.find(x => x.id === t.providerId);
+    return `<div class="provider-card" style="margin-bottom:0.5rem;">
+      <div style="flex:1;">
+        <span class="type-badge">${p ? p.type : "General"}</span>
+        <p style="font-size:14px;font-weight:600;color:#e8e8e8;margin-bottom:2px;">${t.title}</p>
+        <span style="font-size:12px;color:#888;">${p ? p.name : ""} · ${t.duration} min${t.notes ? " · " + t.notes : ""}</span>
+      </div>
+      <button class="btn-danger" onclick="deleteTemplate(${t.id})">🗑</button>
+    </div>`;
+  }).join("");
+}
+
+function toggleTemplateForm() {
+  const f = document.getElementById("template-form");
+  const open = f.style.display === "none";
+  f.style.display = open ? "block" : "none";
+  document.getElementById("add-template-btn").textContent = open ? "✕" : "＋";
+  if (open) {
+    // Populate provider dropdown
+    const sel = document.getElementById("tmpl-provider");
+    sel.innerHTML = '<option value="">— No specific provider —</option>' +
+      providers.map(p => `<option value="${p.id}">${p.name} (${p.type})</option>`).join("");
+  }
+}
+
+function saveTemplate() {
+  const title = document.getElementById("tmpl-title").value.trim();
+  const providerId = parseInt(document.getElementById("tmpl-provider").value) || null;
+  const duration = parseInt(document.getElementById("tmpl-duration").value);
+  const notes = document.getElementById("tmpl-notes").value.trim();
+  if (!title) { showStatus("template-status", "Please enter an appointment type.", "error"); return; }
+  templates.push({ id: Date.now(), title, providerId, duration, notes });
+  saveTemplates();
+  renderTemplatesList();
+  document.getElementById("tmpl-title").value = "";
+  document.getElementById("tmpl-notes").value = "";
+  toggleTemplateForm();
+  showStatus("template-status", "Template saved.", "success");
+}
+
+function deleteTemplate(id) {
+  templates = templates.filter(t => t.id !== id);
+  saveTemplates();
+  renderTemplatesList();
+}
+
+function renderTemplateSelect() {
+  const field = document.getElementById("template-field");
+  const sel = document.getElementById("template-select");
+  const pid = parseInt(document.getElementById("provider-select").value);
+  const relevant = templates.filter(t => !t.providerId || t.providerId === pid);
+  if (relevant.length) {
+    sel.innerHTML = '<option value="">— Use a template —</option>' +
+      relevant.map(t => `<option value="${t.id}">${t.title}</option>`).join("");
+    field.style.display = "block";
+  } else {
+    field.style.display = "none";
+  }
+}
+
+function applyTemplate() {
+  const id = parseInt(document.getElementById("template-select").value);
+  if (!id) return;
+  const t = templates.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById("appt-title").value = t.title;
+  document.getElementById("duration").value = t.duration;
+  if (t.notes) document.getElementById("notes").value = t.notes;
+  if (t.providerId && !document.getElementById("provider-select").value) {
+    document.getElementById("provider-select").value = t.providerId;
+    onProviderChange();
+  }
+  updateTitlePreview();
+}
+
+// ─── NEXT APPOINTMENT WIDGET ──────────────────────────────
+async function loadNextAppointment() {
+  if (!accessToken) return;
+  try {
+    const now = new Date().toISOString();
+    const resp = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now}&maxResults=5&singleEvents=true&orderBy=startTime`,
+      { headers: { Authorization: "Bearer " + accessToken } }
+    );
+    const data = await resp.json();
+    const next = (data.items || []).find(e => e.summary && e.summary.includes("@"));
+    if (next) {
+      const start = new Date(next.start.dateTime || next.start.date);
+      const now2 = new Date();
+      const diff = Math.ceil((start - now2) / (1000 * 60 * 60 * 24));
+      const countdown = diff === 0 ? "Today!" : diff === 1 ? "Tomorrow" : `In ${diff} days`;
+      const fmt = d => d.toLocaleString("en-US", { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
+      document.getElementById("next-appt-title").textContent = next.summary;
+      document.getElementById("next-appt-time").textContent = fmt(start);
+      document.getElementById("next-appt-countdown").textContent = countdown;
+      document.getElementById("next-appt-widget").style.display = "block";
+    }
+  } catch(e) { console.warn("Next appt error:", e); }
+}
+
+// ─── SIRI SHORTCUT PROMPT ─────────────────────────────────
+function checkSiriPrompt() {
+  const shown = localStorage.getItem("qc_siri_prompt");
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone;
+  if (isIOS && !isStandalone && !shown) {
+    setTimeout(() => {
+      showMainStatus("📱 Tip: Tap Share → Add to Home Screen for a native app experience + Siri shortcut!", "success");
+      localStorage.setItem("qc_siri_prompt", "1");
+    }, 3000);
+  }
+}
+
+
+
+// ─── CUSTOM DATE/TIME PICKER ──────────────────────────────
+function initCustomDateTime() {
+  // Populate years (current year + 2)
+  const yearSel = document.getElementById("date-year");
+  const currentYear = new Date().getFullYear();
+  for (let y = currentYear; y <= currentYear + 2; y++) {
+    const opt = document.createElement("option");
+    opt.value = y;
+    opt.textContent = y;
+    yearSel.appendChild(opt);
+  }
+  // Set defaults to today + next hour
+  const now = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  document.getElementById("date-month").value = pad(now.getMonth() + 1);
+  populateDays();
+  document.getElementById("date-day").value = pad(now.getDate());
+  document.getElementById("date-year").value = now.getFullYear();
+  const nextHour = now.getHours() + 1;
+  const h12 = nextHour % 12 || 12;
+  document.getElementById("time-hour").value = pad(h12);
+  document.getElementById("time-minute").value = "00";
+  document.getElementById("time-ampm").value = nextHour >= 12 ? "PM" : "AM";
+  updateCustomDateTime();
+}
+
+function populateDays() {
+  const month = parseInt(document.getElementById("date-month").value) || 1;
+  const year = parseInt(document.getElementById("date-year").value) || new Date().getFullYear();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const daySel = document.getElementById("date-day");
+  const current = daySel.value;
+  daySel.innerHTML = "<option value=''>Day</option>";
+  for (let d = 1; d <= daysInMonth; d++) {
+    const opt = document.createElement("option");
+    opt.value = String(d).padStart(2, "0");
+    opt.textContent = d;
+    daySel.appendChild(opt);
+  }
+  if (current && parseInt(current) <= daysInMonth) daySel.value = current;
+}
+
+function updateCustomDateTime() {
+  populateDays();
+  const month = document.getElementById("date-month").value;
+  const day = document.getElementById("date-day").value;
+  const year = document.getElementById("date-year").value;
+  if (month && day && year) {
+    document.getElementById("date").value = year + "-" + month + "-" + day;
+  }
+  const hour = document.getElementById("time-hour").value;
+  const minute = document.getElementById("time-minute").value;
+  const ampm = document.getElementById("time-ampm").value;
+  if (hour && minute) {
+    let h24 = parseInt(hour);
+    if (ampm === "PM" && h24 !== 12) h24 += 12;
+    if (ampm === "AM" && h24 === 12) h24 = 0;
+    document.getElementById("time").value = String(h24).padStart(2, "0") + ":" + minute;
+  }
+  updateTitlePreview();
+}
+
+// Apply dark mode on load
+document.documentElement.classList.add("dark");
+checkSiriPrompt();
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("dark-btn");
+  if (btn) btn.textContent = "☀️";
+});
+
+// ─── DEFAULTS ─────────────────────────────────────────────
+function setDefaults() {
+  initCustomDateTime();
+}
+
+// ─── PROVIDERS ────────────────────────────────────────────
+function renderProviderSelect() {
+  const sel = document.getElementById("provider-select");
+  sel.innerHTML = '<option value="">— Select a care team member —</option>' +
+    providers.map(p => `<option value="${p.id}">${p.name} (${p.type})</option>`).join("");
+}
+
+function onProviderChange() {
+  const p = providers.find(x => x.id === parseInt(document.getElementById("provider-select").value));
+  if (p) document.getElementById("location").value = p.location;
+  updateTitlePreview();
+  renderTemplateSelect();
+}
+
+function renderProvidersList() {
+  const el = document.getElementById("providers-list");
+  if (!providers.length) {
+    el.innerHTML = '<div class="empty-state"><span class="empty-icon">👤</span>No care team members yet. Add one below.</div>';
+    return;
+  }
+  el.innerHTML = providers.map(p => `
+    <div class="provider-card" id="card-${p.id}">
+      <div class="provider-info" style="flex:1;">
+        <span class="type-badge">${p.type}</span>
+        <p>${p.name}</p>
+        <span>${p.location || "No location set"}</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="btn-secondary" style="padding:6px 10px;font-size:13px;" onclick="editProvider(${p.id})">✏️</button>
+        <button class="btn-danger" onclick="removeProvider(${p.id})">🗑</button>
+      </div>
+    </div>
+    <div class="edit-form" id="edit-${p.id}" style="display:none;">
+      <div class="field"><label>Name</label><input type="text" id="edit-name-${p.id}" value="${p.name}"/></div>
+      <div class="field"><label>Type</label>
+        <select id="edit-type-${p.id}">
+          ${["Primary Care","Dermatologist","Dentist","Optometrist","Cardiologist","Orthopedist","Physical Therapist","Other"].map(t => `<option${t===p.type?" selected":""}>${t}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field"><label>Location</label>
+        <div class="location-wrap">
+          <input type="text" id="edit-loc-${p.id}" value="${p.location||""}" oninput="handleEditLocInput(${p.id})" onblur="setTimeout(()=>hideEditLoc(${p.id}),200)" autocomplete="off"/>
+          <div class="loc-suggestions" id="edit-loc-suggestions-${p.id}" style="display:none;"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:0.5rem;">
+        <button class="btn-secondary" onclick="cancelEdit(${p.id})">Cancel</button>
+        <button class="btn-primary" onclick="saveEdit(${p.id})">✓ Save</button>
+      </div>
+    </div>`).join("");
+}
+
+function removeProvider(id) {
+  providers = providers.filter(p => p.id !== id);
+  saveProviders();
+  renderProvidersList();
+  renderProviderSelect();
+}
+
+function toggleAddForm() {
+  const f = document.getElementById("add-form"), open = f.style.display === "none";
+  f.style.display = open ? "block" : "none";
+  document.getElementById("add-icon-btn").textContent = open ? "✕" : "＋";
+}
+
+function saveProvider() {
+  const name = document.getElementById("new-name").value.trim();
+  const type = document.getElementById("new-type").value;
+  const loc = document.getElementById("new-location").value.trim();
+  if (!name) { showStatus("provider-status", "Please enter a care team member name.", "error"); return; }
+  providers.push({id: Date.now(), name, type, location: loc});
+  saveProviders();
+  renderProvidersList();
+  renderProviderSelect();
+  document.getElementById("new-name").value = "";
+  document.getElementById("new-location").value = "";
+  toggleAddForm();
+  showStatus("provider-status", "Care team member saved.", "success");
+}
+
+// ─── LOCATION AUTOCOMPLETE ────────────────────────────────
+function hideLoc() { document.getElementById("loc-suggestions").style.display = "none"; }
+function hideNewLoc() { document.getElementById("new-loc-suggestions").style.display = "none"; }
+
+function selectLoc(inputId, boxId, val) {
+  document.getElementById(inputId).value = val;
+  document.getElementById(boxId).style.display = "none";
+}
+
+// ─── TITLE LOGIC ──────────────────────────────────────────
+function formatTime(t) {
+  if (!t) return "";
+  const [h, m] = t.split(":").map(Number), per = h >= 12 ? "PM" : "AM", hr = h % 12 || 12;
+  return m === 0 ? `${hr}${per}` : `${hr}:${String(m).padStart(2,"0")}${per}`;
+}
+
+function getProviderType() {
+  const p = providers.find(x => x.id === parseInt(document.getElementById("provider-select").value));
+  return p ? p.type : "";
+}
+
+function buildTitle(type, base, time) {
+  const t = formatTime(time) || "—";
+  const label = base ? `${base} Appointment` : "Appointment";
+  return type ? `${type} — ${label} @ ${t}` : `${label} @ ${t}`;
+}
+
+function updateTitlePreview() {
+  const type = getProviderType(), base = document.getElementById("appt-title").value.trim();
+  const t = document.getElementById("time").value, pid = document.getElementById("provider-select").value;
+  const preview = document.getElementById("title-preview");
+  if (pid || base || t) {
+    preview.textContent = `Calendar title: "${buildTitle(type, base, t)}"`;
+    preview.style.display = "block";
+  } else {
+    preview.style.display = "none";
+  }
+}
+
+function getCalTitle() {
+  return buildTitle(getProviderType(), document.getElementById("appt-title").value.trim(), document.getElementById("time").value);
+}
+
+function toggleWorkEmail() {
+  const checked = document.getElementById("send-work").checked;
+  document.getElementById("work-email-field").classList.toggle("disabled", !checked);
+  document.getElementById("chk-label").textContent = checked ? "Yes, send it" : "Personal only";
+}
+
+// ─── PREVIEW ──────────────────────────────────────────────
+function handlePreview() {
+  const date = document.getElementById("date").value, time = document.getElementById("time").value;
+  const duration = parseInt(document.getElementById("duration").value), buffer = parseInt(document.getElementById("buffer").value);
+  if (!date || !time) { showMainStatus("Please fill in a date and time.", "error"); return; }
+  const start = new Date(`${date}T${time}`);
+  const blockStart = new Date(start.getTime() - buffer * 60000);
+  const blockEnd = new Date(start.getTime() + (duration + buffer) * 60000);
+  const fmt = d => d.toLocaleString("en-US", {weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit"});
+  const sendWork = document.getElementById("send-work").checked;
+  let msg = `"${getCalTitle()}" · Block: ${fmt(blockStart)} → ${fmt(blockEnd)} · Out of Office · 1hr reminder`;
+  if (sendWork) msg += ` · .ics → ${WORK_EMAIL}`;
+  showMainStatus(msg, "success");
+}
+
+// ─── BOOK IT ──────────────────────────────────────────────
+async function handleCreate() {
+  const date = document.getElementById("date").value, time = document.getElementById("time").value;
+  const duration = parseInt(document.getElementById("duration").value), buffer = parseInt(document.getElementById("buffer").value);
+  const pid = document.getElementById("provider-select").value;
+  const p = providers.find(x => x.id === parseInt(pid));
+  const location = document.getElementById("location").value;
+  const notes = document.getElementById("notes").value;
+  const sendWork = document.getElementById("send-work").checked;
+
+  if (!accessToken) { showMainStatus("Please sign in with Google first.", "error"); return; }
+  if (!date || !time) { showMainStatus("Date and time are required.", "error"); return; }
+
+  const bookBtn = document.getElementById("book-btn");
+  bookBtn.disabled = true;
+  bookBtn.textContent = "Booking...";
+  showMainStatus("Creating your calendar event...", "loading");
+
+  try {
+    const start = new Date(`${date}T${time}`);
+    const blockStart = new Date(start.getTime() - buffer * 60000);
+    const blockEnd = new Date(start.getTime() + (duration + buffer) * 60000);
+    const fmt = d => d.toLocaleString("en-US", {weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit"});
+    const calTitle = getCalTitle();
+
+    // 1. Create Google Calendar event
+    const event = {
+      summary: calTitle,
+      location: location,
+      description: notes || "",
+      start: { dateTime: blockStart.toISOString(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+      end: { dateTime: blockEnd.toISOString(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+      reminders: { useDefault: false, overrides: [{ method: "popup", minutes: 60 }] },
+      transparency: "opaque",
+      status: "confirmed",
+    };
+
+    const calResp = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },
+      body: JSON.stringify(event)
+    });
+
+    if (!calResp.ok) {
+      const err = await calResp.json();
+      throw new Error(err.error?.message || "Calendar API error");
+    }
+
+    // 2. Send .ics email to work if checked
+    if (sendWork) {
+      const ics = buildICS(calTitle, blockStart, blockEnd, location, notes);
+      await sendICSEmail(calTitle, blockStart, blockEnd, ics);
+    }
+
+    // 3. Log to history
+    const entry = {
+      id: Date.now(), calTitle, provider: p ? p.name : "", type: p ? p.type : "",
+      date, time, duration, buffer, location, notes,
+      blockStart: fmt(blockStart), blockEnd: fmt(blockEnd),
+      sentToWork: sendWork, bookedAt: new Date().toLocaleString()
+    };
+    history.unshift(entry);
+    saveHistory();
+
+    // 4. Show confirmation
+    document.getElementById("confirm-title").textContent = calTitle;
+    document.getElementById("confirm-details").innerHTML = buildDetailHTML(entry, p, sendWork);
+    goTo("screen-confirm");
+
+  } catch (err) {
+    showMainStatus("Error: " + err.message, "error");
+  } finally {
+    bookBtn.disabled = false;
+    bookBtn.textContent = "✓ Book it";
+  }
+}
+
+// ─── ICS BUILDER ──────────────────────────────────────────
+function buildICS(title, start, end, location, notes) {
+  const fmt = d => d.toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
+  const uid = `quickclinic-${Date.now()}@quickclinic`;
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//QuickClinic//EN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTART:${fmt(start)}`,
+    `DTEND:${fmt(end)}`,
+    `SUMMARY:${title}`,
+    "STATUS:CONFIRMED",
+    "TRANSP:OPAQUE",
+    "X-MICROSOFT-CDO-BUSYSTATUS:OOF",
+    "BEGIN:VALARM",
+    "TRIGGER:-PT1H",
+    "ACTION:DISPLAY",
+    "DESCRIPTION:Reminder",
+    "END:VALARM",
+  ];
+  if (location) lines.push(`LOCATION:${location}`);
+  if (notes) lines.push(`DESCRIPTION:${notes}`);
+  lines.push("END:VEVENT", "END:VCALENDAR");
+  return lines.join("\r\n");
+}
+
+// ─── SEND EMAIL ───────────────────────────────────────────
+async function sendICSEmail(title, start, end, icsContent) {
+  const fmt = d => d.toLocaleString("en-US", {weekday:"long", month:"long", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit"});
+  const boundary = "QC_" + Date.now();
+  // Encode subject line for RFC 2047 compliance (handles special chars in Outlook)
+  const isoStart = start.toISOString();
+  const isoEnd = end.toISOString();
+  // Subject kept as plain ASCII so Power Automate can parse timestamps directly
+  const safeTitle = title.replace(/[^\x00-\x7F]/g, "?");
+  const subject = `QCSTART:${isoStart}|QCEND:${isoEnd}|Calendar invite: ${safeTitle}`;
+  const bodyText = [
+    `QUICKCLINIC-TITLE: ${title}`,
+    `QUICKCLINIC-START: ${isoStart}`,
+    `QUICKCLINIC-END: ${isoEnd}`,
+    `QUICKCLINIC-LOCATION: ${document.getElementById("location").value || ""}`,
+    `QUICKCLINIC-NOTES: ${document.getElementById("notes").value || ""}`,
+    "",
+    `You have an appointment: ${title}`,
+    `When: ${fmt(start)} - ${fmt(end)}`,
+    `Added from QuickClinic.`
+  ].join("\r\n");
+  const icsB64 = btoa(unescape(encodeURIComponent(icsContent)));
+
+  const mime = [
+    `To: ${WORK_EMAIL}`,
+    `Subject: ${subject}`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    "",
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: 7bit",
+    "",
+    bodyText,
+    "",
+    `--${boundary}`,
+    'Content-Type: text/calendar; charset="UTF-8"; method=PUBLISH; name="invite.ics"',
+    'Content-Disposition: attachment; filename="invite.ics"',
+    "Content-Transfer-Encoding: base64",
+    "",
+    icsB64,
+    "",
+    `--${boundary}--`,
+  ].join("\r\n");
+
+  const encoded = btoa(unescape(encodeURIComponent(mime)))
+    .replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+
+  const resp = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },
+    body: JSON.stringify({ raw: encoded })
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json();
+    throw new Error("Gmail error: " + (err.error?.message || "unknown"));
+  }
+}
+
+// ─── HISTORY ──────────────────────────────────────────────
+function renderHistory() {
+  const listEl = document.getElementById("history-list");
+  const detailEl = document.getElementById("history-detail");
+  detailEl.style.display = "none";
+  listEl.style.display = "block";
+  if (!history.length) {
+    listEl.innerHTML = '<div class="empty-state"><span class="empty-icon">🕐</span>No appointments booked yet.</div>';
+    return;
+  }
+
+  // Group by month/year
+  const groups = {};
+  history.forEach(h => {
+    const d = new Date(h.date + "T" + h.time);
+    const key = d.toLocaleString("en-US", { month: "long", year: "numeric" });
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(h);
+  });
+
+  listEl.innerHTML = Object.entries(groups).map(([monthYear, items]) => `
+    <div class="history-month-header">${monthYear}</div>
+    ${items.map(h => `
+      <div class="history-item">
+        <div onclick="showDetail(${h.id})" style="flex:1;min-width:0;cursor:pointer;">
+          <div class="history-title">${h.calTitle}</div>
+          <div class="history-sub">${h.blockStart}${h.provider ? " · " + h.provider : ""}</div>
+        </div>
+        <button class="btn-danger" style="flex-shrink:0;margin-left:8px;padding:6px 10px;" onclick="deleteHistoryItem(${h.id})">🗑</button>
+      </div>`).join("")}
+  `).join("");
+}
+
+function deleteHistoryItem(id) {
+  if (!confirm("Delete this appointment from history?")) return;
+  history = history.filter(h => h.id !== id);
+  saveHistory();
+  renderHistory();
+}
+
+function showDetail(id) {
+  const h = history.find(x => x.id === id); if (!h) return;
+  const p = providers.find(x => x.name === h.provider);
+  document.getElementById("history-list").style.display = "none";
+  document.getElementById("history-detail").style.display = "block";
+  document.getElementById("detail-title").textContent = h.calTitle;
+  document.getElementById("detail-body").innerHTML = buildDetailHTML(h, p, h.sentToWork) +
+    `<div class="detail-row"><span class="detail-icon">🕐</span><div><div class="detail-label">Booked at</div><div class="detail-value">${h.bookedAt}</div></div></div>`;
+}
+
+function closeDetail() {
+  document.getElementById("history-detail").style.display = "none";
+  document.getElementById("history-list").style.display = "block";
+}
+
+function buildDetailHTML(entry, p, sentToWork) {
+  return `
+    <div class="detail-row"><span class="detail-icon">🕐</span><div><div class="detail-label">Calendar block</div><div class="detail-value">${entry.blockStart} → ${entry.blockEnd}</div></div></div>
+    ${p ? `<div class="detail-row"><span class="detail-icon">👤</span><div><div class="detail-label">Care Team</div><div class="detail-value">${p.name}</div></div></div>` : ""}
+    ${entry.location ? `<div class="detail-row"><span class="detail-icon">📍</span><div><div class="detail-label">Location</div><div class="detail-value">${entry.location}</div></div></div>` : ""}
+    ${entry.notes ? `<div class="detail-row"><span class="detail-icon">📝</span><div><div class="detail-label">Notes</div><div class="detail-value">${entry.notes}</div></div></div>` : ""}
+    <div class="detail-row"><span class="detail-icon">🔔</span><div><div class="detail-label">Reminder</div><div class="detail-value">1 hour before</div></div></div>
+    <div class="detail-row"><span class="detail-icon">📅</span><div><div class="detail-label">Status</div><div class="detail-value">Out of Office</div></div></div>
+    ${sentToWork ? `<div class="detail-row"><span class="detail-icon">✉️</span><div><div class="detail-label">Work .ics sent to</div><div class="detail-value">${WORK_EMAIL}</div></div></div>` : ""}
+  `;
+}
+
+// ─── BOOK ANOTHER ─────────────────────────────────────────
+function bookAnother() {
+  document.getElementById("appt-title").value = "";
+  document.getElementById("notes").value = "";
+  document.getElementById("location").value = "";
+  document.getElementById("provider-select").value = "";
+  document.getElementById("title-preview").style.display = "none";
+  document.getElementById("main-status").className = "status";
+  setDefaults();
+  goTo("screen-main");
+}
+
+// ─── STATUS HELPERS ───────────────────────────────────────
+function showMainStatus(msg, type) {
+  const el = document.getElementById("main-status");
+  el.textContent = msg; el.className = "status " + type;
+}
+function showStatus(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.className = "status " + type;
+  setTimeout(() => el.className = "status", 3000);
+}
+</script>
+</body>
 </html>
